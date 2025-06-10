@@ -1,5 +1,5 @@
 from functools import wraps
-from flask import Blueprint, render_template, redirect, current_app, url_for, flash, abort
+from flask import Blueprint, render_template, redirect, url_for, flash, abort
 from flask_login import login_required, current_user
 from .forms import ChangePasswordForm, AdminSiteConfigForm
 from .extensions import db
@@ -33,13 +33,11 @@ def inject_theme():
 
 @views.route("/")
 def index():
-    current_app.logger.info('Accessing index page')
     return render_template('index.html')
 
 @views.route('/profile', methods=['GET'], strict_slashes=False)
 @login_required
 def profile():
-    current_app.logger.info('Accessing profile page for user: %s', current_user.email)
     return render_template(
         'profile.html',
         user=current_user

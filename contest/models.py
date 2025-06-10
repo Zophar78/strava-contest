@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, UTC
 from flask_login import UserMixin
 from sqlalchemy import inspect
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -68,7 +68,7 @@ class User(UserMixin, db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     athlete_id = db.Column(db.Integer, db.ForeignKey('athlete.id'), nullable=True)
     athlete = db.relationship('Athlete', backref='users', uselist=False)
-    registered_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    registered_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
