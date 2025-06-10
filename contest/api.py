@@ -72,7 +72,7 @@ def get_week_data(year, week):
 
 
 def get_month_weeks(year, month):
-    """Retourne la liste des numéros de semaines ISO à inclure dans le mois (>=4 jours dans le mois)."""
+    """Return the list of ISO week numbers to include in the month (weeks with ≥ 4 days in the month)."""
     cal = calendar.Calendar()
     month_weeks = []
     for week_tuple in cal.monthdatescalendar(year, month):

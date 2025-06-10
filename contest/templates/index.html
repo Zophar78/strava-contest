@@ -88,7 +88,7 @@ function loadLeaderboards(params = {}) {
         data.month_weeks ? `Weeks included: ${data.month_weeks.join(", ")}` : "";
       document.getElementById("year-title").textContent =
         `Year ${data.year}`;
-      document.getElementById("year-details").innerHTML = ""; // pour alignement
+      document.getElementById("year-details").innerHTML = "";
 
       const fillTable = (tbodyId, points) => {
         const tbody = document.getElementById(tbodyId);
