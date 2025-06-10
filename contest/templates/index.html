@@ -1,0 +1,132 @@
+{% extends "_base.html" %}
+{% block title %}Strava contest{% endblock %}
+
+{% block content %}
+<style>
+  .leaderboard-details {
+    text-align: center;
+    font-size: 0.85em;
+    color: #666;
+    margin-bottom: 0.5em;
+    min-height: 1.5em;
+  }
+</style>
+<div class="container-fluid" id="main-content">
+  <div style="display: flex; gap: 2rem;">
+    <!-- Weekly Leaderboard -->
+    <div style="flex: 1;">
+      <h3 style="text-align:center;">
+        <button class="btn btn-sm btn-outline-secondary" onclick="changeWeek(-1)">&#8592;</button>
+        <span id="week-title"></span>
+        <button class="btn btn-sm btn-outline-secondary" onclick="changeWeek(1)">&#8594;</button>
+      </h3>
+      <div id="week-details" class="leaderboard-details"></div>
+      <table class="table table-striped">
+        <tr><th>Rank</th><th>Athlete</th><th>Points</th></tr>
+        <tbody id="week-table"></tbody>
+      </table>
+    </div>
+    <!-- Monthly Leaderboard -->
+    <div style="flex: 1;">
+      <h3 style="text-align:center;">
+        <button class="btn btn-sm btn-outline-secondary" onclick="changeMonth(-1)">&#8592;</button>
+        <span id="month-title"></span>
+        <button class="btn btn-sm btn-outline-secondary" onclick="changeMonth(1)">&#8594;</button>
+      </h3>
+      <div id="month-details" class="leaderboard-details"></div>
+      <table class="table table-striped">
+        <tr><th>Rank</th><th>Athlete</th><th>Points</th></tr>
+        <tbody id="month-table"></tbody>
+      </table>
+    </div>
+    <!-- Yearly Leaderboard -->
+    <div style="flex: 1;">
+      <h3 style="text-align:center;">
+        <button class="btn btn-sm btn-outline-secondary" onclick="changeYear(-1)">&#8592;</button>
+        <span id="year-title"></span>
+        <button class="btn btn-sm btn-outline-secondary" onclick="changeYear(1)">&#8594;</button>
+      </h3>
+      <div id="year-details" class="leaderboard-details"></div>
+      <table class="table table-striped">
+        <tr><th>Rank</th><th>Athlete</th><th>Points</th></tr>
+        <tbody id="year-table"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom Content (always at the bottom) -->
+<div class="container" style="max-width: 600px; margin: 3rem auto 2rem auto;">
+  {% if not current_user.athlete_id %}
+    <div class="alert alert-info text-center shadow-sm" role="alert" style="font-size:1.1em;">
+        {{ banner | safe }}
+    </div>
+  {% endif %}
+</div>
+
+<script>
+let currentWeek, currentMonth, currentYear, weekStart, weekEnd, monthName;
+
+function loadLeaderboards(params = {}) {
+  const url = new URL("/api/v1/leaderboard", window.location.origin);
+  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+  fetch(url)
+    .then(r => r.json())
+    .then(data => {
+      currentWeek = data.week;
+      currentMonth = data.month;
+      currentYear = data.year;
+      weekStart = data.week_start;
+      weekEnd = data.week_end;
+      monthName = data.month_name;
+
+      document.getElementById("week-title").textContent =
+        `Week ${data.week}`;
+      document.getElementById("week-details").innerHTML =
+        weekStart && weekEnd ? `(${weekStart} - ${weekEnd})` : "";
+      document.getElementById("month-title").textContent =
+        `${monthName} ${data.year}`;
+      document.getElementById("month-details").innerHTML = ""; // pour alignement
+      document.getElementById("year-title").textContent =
+        `Year ${data.year}`;
+      document.getElementById("year-details").innerHTML = ""; // pour alignement
+
+      const fillTable = (tbodyId, points) => {
+        const tbody = document.getElementById(tbodyId);
+        tbody.innerHTML = "";
+        points.forEach(row => {
+          tbody.innerHTML += `<tr>
+            <td>${row.rank}</td>
+            <td>${row.firstname} ${row.lastname}</td>
+            <td>${row.points}</td>
+          </tr>`;
+        });
+      };
+      fillTable("week-table", data.week_points);
+      fillTable("month-table", data.month_points);
+      fillTable("year-table", data.year_points);
+    });
+}
+
+// Pagination handlers
+function changeWeek(delta) {
+  let w = parseInt(currentWeek) + delta;
+  if (w < 1) w = 52;
+  if (w > 52) w = 1;
+  loadLeaderboards({ week: w, month: currentMonth, year: currentYear });
+}
+function changeMonth(delta) {
+  let m = parseInt(currentMonth) + delta;
+  if (m < 1) m = 12;
+  if (m > 12) m = 1;
+  loadLeaderboards({ week: currentWeek, month: m, year: currentYear });
+}
+function changeYear(delta) {
+  let y = parseInt(currentYear) + delta;
+  loadLeaderboards({ week: currentWeek, month: currentMonth, year: y });
+}
+
+// Initial load
+loadLeaderboards();
+</script>
+{% endblock %}

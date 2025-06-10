@@ -1,0 +1,20 @@
+{% extends "_base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <div class="container-fluid">
+    <!-- Left side: Brand or welcome -->
+    <span class="navbar-brand">
+      Admin Dashboard
+    </span>
+    <!-- Right side: Settings link for admin -->
+    <div class="d-flex ms-auto">
+      {% if current_user.is_authenticated and current_user.is_admin %}
+        <a href="{{ url_for('views.admin_settings') }}" class="nav-link text-decoration-none" title="Site settings">
+          <i class="bi bi-gear"></i> Settings
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+{% endblock %}

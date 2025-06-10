@@ -1,0 +1,38 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+
+# Distribution / packaging
+*.egg-info/
+.python-version
+
+# Database
+jobs.sqlite
+*.db
+*.svg
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.pytest_cache/
+cover/
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Database
+*.sqlite
+
+# Ignore visual studio code folder
+.vscode

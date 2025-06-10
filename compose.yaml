@@ -1,0 +1,15 @@
+services:
+  app:
+    build:
+      dockerfile_inline: |
+        FROM python:3
+        WORKDIR /usr/src/app
+        COPY requirements.txt ./
+        RUN pip install --no-cache-dir -r requirements.txt
+        COPY . .
+        CMD ["python", "./app.py"]
+    volumes:
+    - ./database/:/data/
+    ports:
+    - 8080:8080
+    env_file: "webapp.env"
