@@ -57,11 +57,9 @@
 
 <!-- Bottom Content (always at the bottom) -->
 <div class="container" style="max-width: 600px; margin: 3rem auto 2rem auto;">
-  {% if not current_user.athlete_id %}
-    <div class="alert alert-info text-center shadow-sm" role="alert" style="font-size:1.1em;">
+  <div class="alert alert-info text-center shadow-sm" role="alert" style="font-size:1.1em;">
         {{ banner | safe }}
-    </div>
-  {% endif %}
+  </div>
 </div>
 
 <script>
@@ -86,10 +84,11 @@ function loadLeaderboards(params = {}) {
         weekStart && weekEnd ? `(${weekStart} - ${weekEnd})` : "";
       document.getElementById("month-title").textContent =
         `${monthName} ${data.year}`;
-      document.getElementById("month-details").innerHTML = ""; // pour alignement
+      document.getElementById("month-details").innerHTML =
+        data.month_weeks ? `Weeks included: ${data.month_weeks.join(", ")}` : "";
       document.getElementById("year-title").textContent =
         `Year ${data.year}`;
-      document.getElementById("year-details").innerHTML = ""; // pour alignement
+      document.getElementById("year-details").innerHTML = "";
 
       const fillTable = (tbodyId, points) => {
         const tbody = document.getElementById(tbodyId);

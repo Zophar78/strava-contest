@@ -71,13 +71,22 @@ def get_week_data(year, week):
     ]
 
 
-def get_month_data(year, month):
-    month_weeks = set()
+def get_month_weeks(year, month):
+    """Return the list of ISO week numbers to include in the month (weeks with ≥ 4 days in the month)."""
     cal = calendar.Calendar()
+    month_weeks = []
     for week_tuple in cal.monthdatescalendar(year, month):
-        for day in week_tuple:
-            if day.month == month:
-                month_weeks.add(day.isocalendar()[1])
+        days_in_month = [d for d in week_tuple if d.month == month]
+        if len(days_in_month) >= 4:
+            week_number = week_tuple[0].isocalendar()[1]
+            # Correction for week 1 of January, which may be week 52 or 53 of the previous year.
+            if week_number == 1 and month == 12 and week_tuple[0].month == 1:
+                week_number = date(year, 12, 31).isocalendar()[1]
+            month_weeks.append(week_number)
+    return sorted(set(month_weeks))
+
+
+def get_month_data(year, month_weeks):
     month_points_query = (
         Point.query.filter(Point.year == year, Point.week_number.in_(month_weeks))
         .join(Athlete)
@@ -133,7 +142,8 @@ def leaderboard():
     month = int(request.args.get('month', today.month))
 
     week_data = get_week_data(year, week)
-    month_data = get_month_data(year, month)
+    month_weeks = get_month_weeks(year, month)
+    month_data = get_month_data(year, month_weeks)
     year_data = get_year_data(year)
 
     try:
@@ -154,4 +164,5 @@ def leaderboard():
         "week_start": week_start.strftime("%a %d %b") if week_start else "",
         "week_end": week_end.strftime("%a %d %b") if week_end else "",
         "month_name": month_name,
+        "month_weeks": month_weeks,  # <-- Ajouté ici
     })
