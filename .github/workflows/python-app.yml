@@ -41,8 +41,11 @@ jobs:
     - name: Lint with pylint
       run: |
         echo "Running pylint..."
-        PYTHONPATH=. pylint contest/*.py
-        PYTHONPATH=. pylint tests/*.py
+        PYTHONPATH=. pylint app.py contest tests
+
+    - name: Security scan with bandit
+      run: |
+        bandit -r app.py contest
 
     - name: Test with pytest
       run: |
