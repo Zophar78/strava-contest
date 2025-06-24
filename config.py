@@ -23,6 +23,11 @@ class Config:  # pylint: disable=too-few-public-methods
     ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "admin@example.com")
     ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin")
 
+    # Flask settings
+    FLASK_DEBUG = os.environ.get("FLASK_DEBUG", "False").lower() == "true"
+    FLASK_RUN_HOST = os.environ.get("FLASK_RUN_HOST", "127.0.0.1")
+    FLASK_RUN_PORT = int(os.environ.get("FLASK_RUN_PORT", 8080))
+
 class TestConfig(Config):  # pylint: disable=too-few-public-methods
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
     WTF_CSRF_ENABLED = False

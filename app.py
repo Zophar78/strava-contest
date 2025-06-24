@@ -1,6 +1,5 @@
 import datetime
 import os
-import sys
 from flask_migrate import upgrade
 from flask_apscheduler import APScheduler
 from contest import create_app
@@ -46,4 +45,7 @@ if should_start_scheduler():
 
 if __name__ == "__main__":  # pragma: no cover
     # Start the Flask application
-    app.run(debug=True, host="0.0.0.0", port=8080)
+    # Pour la prod : debug=False, host par défaut (127.0.0.1) ou variable d'env
+    app.run(debug=app.config.get("FLASK_DEBUG"),
+            host=app.config.get("FLASK_RUN_HOST"),
+            port=app.config.get("FLASK_DEBUG"))
