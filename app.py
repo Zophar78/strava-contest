@@ -8,9 +8,14 @@ from contest.init_defaults import initialize_defaults
 
 
 def should_start_scheduler():
+    # Retourne True si WERKZEUG_RUN_MAIN ou FLASK_MAIN_PROCESS est 'true',
+    # ou si aucune des deux variables n'est définie (cas d'un lancement direct python app.py)
+    wzm = os.environ.get("WERKZEUG_RUN_MAIN")
+    fmp = os.environ.get("FLASK_MAIN_PROCESS")
     return (
-        os.environ.get("WERKZEUG_RUN_MAIN") == "true"
-        or os.environ.get("FLASK_MAIN_PROCESS") == "true"
+        wzm == "true"
+        or fmp == "true"
+        or (wzm is None and fmp is None)
     )
 
 def sync_and_compute(flask_app):
@@ -30,7 +35,7 @@ if should_start_scheduler():
     scheduler = APScheduler()
     scheduler.init_app(app)
     if not app.config.get("TESTING", False):
-        print("[scheduler] Adding strava_sync_and_compute job")
+        app.logger.info("[scheduler] Adding strava_sync_and_compute job")
         scheduler.add_job(
             id="strava_sync_and_compute",
             func=sync_and_compute,

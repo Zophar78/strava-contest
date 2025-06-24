@@ -8,7 +8,6 @@ class Config:  # pylint: disable=too-few-public-methods
     SQLALCHEMY_DATABASE_URI = f"sqlite:///{DATABASE_FILE}"
 
     # STRAVA API
-    STRAVA_REDIRECT_URI = os.environ.get('STRAVA_REDIRECT_URI') or 'http://localhost:5000/strava_callback'
     STRAVA_CLIENT_ID=os.environ.get('STRAVA_CLIENT_ID') or 'XXXX'
     STRAVA_CLIENT_SECRET=os.environ.get('STRAVA_CLIENT_SECRET') or 'changeme'
     # Fetch activities from the last {STRAVA_REFRESH_INTERVAL} months
@@ -19,7 +18,13 @@ class Config:  # pylint: disable=too-few-public-methods
 
     # Contest settings
     MINIMUM_ACTIVITY_TIME = os.environ.get('MINIMUM_ACTIVITY_TIME') or 20 * 60
+    CONTEST_RULES = [
+        {"name": "Standard", "args": {"points_per_activity": 1}},
+        {"name": "RegularityBonusA", "args": {"bonus_points": 2}},
+        {"name": "RegularityBonusB", "args": {"bonus_points": 3}},
+    ]
 
+    # Admin settings
     ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "admin@example.com")
     ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin")
 
@@ -27,6 +32,7 @@ class Config:  # pylint: disable=too-few-public-methods
     FLASK_DEBUG = os.environ.get("FLASK_DEBUG", "False").lower() == "true"
     FLASK_RUN_HOST = os.environ.get("FLASK_RUN_HOST", "127.0.0.1")
     FLASK_RUN_PORT = int(os.environ.get("FLASK_RUN_PORT", 8080))
+
 
 class TestConfig(Config):  # pylint: disable=too-few-public-methods
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'

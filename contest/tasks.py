@@ -3,7 +3,7 @@ import dateutil.relativedelta
 from flask import current_app
 from stravalib import Client
 from .extensions import db
-from .rules import ContestEngine, Standard, RegularityBonusA, RegularityBonusB
+from .rules import ContestEngine, build_rules_from_config
 from .models import Athlete, Activity, Point
 
 def sync_athlete(athlete):
@@ -105,20 +105,14 @@ def compute_athlete_points(athlete):
             a for a in activities
             if a.start_date.isocalendar()[:2] == (year, week)
         ]
-        rules = [
-            Standard(points_per_activity=1),
-            RegularityBonusA(bonus_points=2, week_number=week, year=year),
-            RegularityBonusB(bonus_points=2),
-        ]
+
+        # Construction dynamique des règles pour cette semaine
+        config = current_app.config["CONTEST_RULES"]
+        rules = build_rules_from_config(config, year=year, week=week)
         engine = ContestEngine(rules, year)
         points = 0
         for rule in rules:
-            if isinstance(rule, RegularityBonusA):
-                points += RegularityBonusA(rule.bonus_points, week, year).calculate_points(
-                    athlete, week_activities
-                )
-            else:
-                points += rule.calculate_points(athlete, week_activities)
+            points += rule.calculate_points(athlete, week_activities)
 
         existing = Point.query.filter_by(year=year, week_number=week, athlete_id=athlete.id).first()
         if points > 0:
