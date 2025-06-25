@@ -106,9 +106,9 @@ def compute_athlete_points(athlete):
             if a.start_date.isocalendar()[:2] == (year, week)
         ]
 
-        # Construction dynamique des règles pour cette semaine
+        # Compute points for this athlete in this week
         config = current_app.config["CONTEST_RULES"]
-        rules = build_rules_from_config(config, year=year, week=week)
+        rules = build_rules_from_config(config)
         engine = ContestEngine(rules, year)
         points = 0
         for rule in rules:

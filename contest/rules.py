@@ -35,38 +35,52 @@ class Rule(ABC):
     def calculate_points(self, athlete: Athlete, activities: list) -> int:
         pass
 
+    @staticmethod
+    def filter_valid_activities(activities):
+        min_time = current_app.config['MINIMUM_ACTIVITY_TIME']
+        return [a for a in activities if getattr(a, 'moving_time', 0) >= min_time]
+
 class Standard(Rule):
     """1 point per activity (minimum duration, max one per day)."""
     def __init__(self, points_per_activity: int):
         self.points_per_activity = points_per_activity
 
     def calculate_points(self, athlete: Athlete, activities: list) -> int:
-        return len(unique_activity_days(activities)) * self.points_per_activity
+        valid_activities = self.filter_valid_activities(activities)
+        return len(unique_activity_days(valid_activities)) * self.points_per_activity
 
 class RegularityBonusA(Rule):
-    """Bonus if at least one activity this week and at least one last week."""
-    def __init__(self, bonus_points: int, week_number: int, year: int):
+    """
+    2 bonus points for the first activity of the week following a week with at least one activity.
+    The first week of the month considers the last week of the previous month.
+    """
+    def __init__(self, bonus_points: int):
         self.bonus_points = bonus_points
-        self.week_number = week_number
-        self.year = year
 
     def calculate_points(self, athlete: Athlete, activities: list) -> int:
-        if not activities:
+        valid_activities = self.filter_valid_activities(activities)
+        if not valid_activities:
             return 0
-        # Calculate last week (handle year change)
-        if self.week_number == 1:
-            prev_year = self.year - 1
-            prev_week = date(prev_year, 12, 28).isocalendar()[1]
+        # Use the first activity of the week to determine the week and year
+        first_activity = min(valid_activities, key=lambda a: a.start_date)
+        year, week = first_activity.start_date.isocalendar()[:2]
+        # Previous week (handle month/year change)
+        if week == 1:
+            # Find the last week of the previous month
+            prev_month = first_activity.start_date.replace(day=1) - timedelta(days=1)
+            prev_year, prev_week = prev_month.isocalendar()[:2]
         else:
-            prev_year = self.year
-            prev_week = self.week_number - 1
+            prev_year = year
+            prev_week = week - 1
         last_week_range = week_boundaries(prev_year, prev_week)
         last_week_activities = get_valid_activities(
             time.mktime(last_week_range['first_monday'].timetuple()),
             time.mktime(last_week_range['last_sunday'].timetuple()),
             athlete.id
         )
-        return self.bonus_points if last_week_activities else 0
+        if last_week_activities:
+            return self.bonus_points
+        return 0
 
 class RegularityBonusB(Rule):
     """Bonus for at least 4 unique activity days in the week."""
@@ -74,7 +88,8 @@ class RegularityBonusB(Rule):
         self.bonus_points = bonus_points
 
     def calculate_points(self, athlete: Athlete, activities: list) -> int:
-        return self.bonus_points if len(unique_activity_days(activities)) >= 4 else 0
+        valid_activities = self.filter_valid_activities(activities)
+        return self.bonus_points if len(unique_activity_days(valid_activities)) >= 4 else 0
 
 # --- Engine ---
 
@@ -97,7 +112,7 @@ class ContestEngine:
                     continue
             except ValueError:
                 continue
-            if (self.year > current_year) or (self.year == current_year and week > current_week):
+            if (self.year >  current_year) or (self.year == current_year and week > current_week):
                 break
             weeks.append((self.year, week))
         return weeks
@@ -128,14 +143,11 @@ RULES_REGISTRY = {
     "RegularityBonusB": RegularityBonusB,
 }
 
-def build_rules_from_config(config, year=None, week=None):
+def build_rules_from_config(config):
     rules = []
     for rule_conf in config:
         name = rule_conf["name"]
         args = rule_conf.get("args", {})
-        # Injecte year/week si besoin pour RegularityBonusA
-        if name == "RegularityBonusA":
-            args = {**args, "year": year, "week_number": week}
         rule_cls = RULES_REGISTRY[name]
         rules.append(rule_cls(**args))
     return rules
